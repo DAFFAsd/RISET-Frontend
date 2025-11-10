@@ -2,6 +2,10 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -112,117 +116,132 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="flex min-h-screen gradient-bg">
       {/* Sidebar */}
-      <div className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 p-4">
+      <div className="w-64 bg-white/10 backdrop-blur-sm border-r border-white/20 p-4">
         <div className="flex flex-col h-full">
-          <Link href="/" className="text-blue-600 hover:text-blue-700 mb-6 flex items-center gap-2">
+          <Link href="/" className="text-white hover:text-white/80 mb-6 flex items-center gap-2">
             <span>←</span> Kembali ke Home
           </Link>
           
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-xl font-bold text-white mb-4">
             Ollama MCP Chat
           </h2>
           
-          <button
+          <Button
             onClick={clearChat}
-            className="w-full py-2 px-4 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors mb-4"
+            variant="destructive"
+            className="w-full mb-4"
           >
             Clear Chat
-          </button>
+          </Button>
 
-          <div className="text-sm text-gray-600 dark:text-gray-400 mt-auto">
-            <p className="mb-2">Status API:</p>
-            <div className={`px-3 py-2 rounded ${error ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}`}>
-              {error ? '❌ Offline' : '✓ Online'}
-            </div>
-          </div>
+          <Card className="text-sm mt-auto bg-white/10 backdrop-blur-sm border-white/20">
+            <CardContent className="pt-4">
+              <p className="mb-2 text-white/80">Status API:</p>
+              <div className={`px-3 py-2 rounded ${error ? 'bg-red-500/20 text-red-200' : 'bg-green-500/20 text-green-200'}`}>
+                {error ? '❌ Offline' : '✓ Online'}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
 
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col">
         {/* Header */}
-        <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Chat dengan Ollama + MCP Tools
-          </h1>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Chatbot dengan akses ke MCP tools (random numbers, power calculations, dll)
-          </p>
-        </div>
+        <Card className="rounded-none border-b border-white/20 bg-white/10 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl text-white">
+              Chat dengan Ollama + MCP Tools
+            </CardTitle>
+            <CardDescription className="text-white/70">
+              Chatbot dengan akses ke MCP tools (random numbers, power calculations, dll)
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4">
-          {messages.length === 0 && (
-            <div className="text-center text-gray-500 dark:text-gray-400 mt-10">
-              <p className="text-lg mb-2">Mulai percakapan dengan mengetik pesan di bawah</p>
-              <p className="text-sm">Bot ini dapat menggunakan MCP tools untuk membantu Anda</p>
-            </div>
-          )}
+        <ScrollArea className="flex-1 p-6">
+          <div className="space-y-4">
+            {messages.length === 0 && (
+              <div className="text-center text-white/70 mt-10">
+                <p className="text-lg mb-2">Mulai percakapan dengan mengetik pesan di bawah</p>
+                <p className="text-sm">Bot ini dapat menggunakan MCP tools untuk membantu Anda</p>
+              </div>
+            )}
 
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-            >
+            {messages.map((message, index) => (
               <div
-                className={`max-w-3xl rounded-lg p-4 ${
-                  message.role === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
-                }`}
+                key={index}
+                className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="text-xs font-semibold mb-1 opacity-75">
-                  {message.role === 'user' ? 'You' : 'Assistant'}
-                </div>
-                <div className="whitespace-pre-wrap">{message.content}</div>
+                <Card
+                  className={`max-w-3xl ${
+                    message.role === 'user'
+                      ? 'bg-blue-600 text-white border-blue-700'
+                      : 'bg-white/10 backdrop-blur-sm text-white border-white/20'
+                  }`}
+                >
+                  <CardContent className="pt-4">
+                    <div className="text-xs font-semibold mb-1 opacity-75">
+                      {message.role === 'user' ? 'You' : 'Assistant'}
+                    </div>
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-          ))}
+            ))}
 
-          {loading && (
-            <div className="flex justify-start">
-              <div className="max-w-3xl rounded-lg p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-2">
-                  <div className="animate-pulse">Thinking...</div>
-                </div>
+            {loading && (
+              <div className="flex justify-start">
+                <Card className="max-w-3xl bg-white/10 backdrop-blur-sm border-white/20">
+                  <CardContent className="pt-4">
+                    <div className="flex items-center gap-2 text-white">
+                      <div className="animate-pulse">Thinking...</div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-          )}
+            )}
 
-          {error && (
-            <div className="flex justify-center">
-              <div className="max-w-3xl rounded-lg p-4 bg-red-100 text-red-800 border border-red-200">
-                {error}
+            {error && (
+              <div className="flex justify-center">
+                <Card className="max-w-3xl bg-red-500/20 text-red-200 border-red-500/30">
+                  <CardContent className="pt-4">
+                    {error}
+                  </CardContent>
+                </Card>
               </div>
-            </div>
-          )}
+            )}
 
-          <div ref={messagesEndRef} />
-        </div>
+            <div ref={messagesEndRef} />
+          </div>
+        </ScrollArea>
 
         {/* Input */}
-        <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
-          <div className="max-w-4xl mx-auto flex gap-2">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder="Ketik pesan Anda... (Enter untuk kirim, Shift+Enter untuk baris baru)"
-              className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white resize-none"
-              rows={3}
-              disabled={loading}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={loading || !input.trim()}
-              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg transition-colors self-end"
-            >
-              {loading ? 'Sending...' : 'Send'}
-            </button>
-          </div>
-        </div>
+        <Card className="rounded-none border-t border-white/20 bg-white/10 backdrop-blur-sm">
+          <CardContent className="pt-4">
+            <div className="max-w-4xl mx-auto flex gap-2">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Ketik pesan Anda... (Enter untuk kirim, Shift+Enter untuk baris baru)"
+                className="flex-1 bg-white/10 border-white/30 text-white placeholder:text-white/50 focus:ring-blue-500 resize-none"
+                rows={3}
+                disabled={loading}
+              />
+              <Button
+                onClick={sendMessage}
+                disabled={loading || !input.trim()}
+                className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold self-end"
+              >
+                {loading ? 'Sending...' : 'Send'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

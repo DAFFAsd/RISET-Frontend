@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { submitLocation } from './actions';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 
 export default function LocationButton() {
   const [status, setStatus] = useState<string>('');
@@ -63,23 +65,24 @@ export default function LocationButton() {
   };
 
   return (
-    <div className="flex flex-col items-center gap-6 w-full max-w-md">
-      <button
+    <div className="flex flex-col items-center gap-6 w-full">
+      <Button
         onClick={handleLocationRequest}
         disabled={loading}
-        className="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-lg transition-colors duration-200 ease-in-out"
+        className="w-full py-6 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold shadow-lg"
+        size="lg"
       >
         {loading ? 'Memproses...' : 'Izinkan Akses Lokasi'}
-      </button>
+      </Button>
       
       {status && (
-        <div className={`p-4 rounded-lg w-full text-center ${
-          status.includes('✓') ? 'bg-green-100 text-green-800' : 
-          status.includes('❌') ? 'bg-red-100 text-red-800' : 
-          'bg-blue-100 text-blue-800'
+        <Card className={`p-4 w-full text-center ${
+          status.includes('✓') ? 'bg-green-100 text-green-800 border-green-300' : 
+          status.includes('❌') ? 'bg-red-100 text-red-800 border-red-300' : 
+          'bg-blue-100 text-blue-800 border-blue-300'
         }`}>
           {status}
-        </div>
+        </Card>
       )}
     </div>
   );
