@@ -1,4 +1,3 @@
-import LocationButton from './LocationButton';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,28 +12,24 @@ export default function Home() {
               Aplikasi Hilirisasi - Mock
             </CardTitle>
             <CardDescription className="text-lg text-white/80">
-              Klik tombol di bawah untuk mengizinkan akses lokasi Anda
+              Chat dengan AI Assistant
             </CardDescription>
             <p className="text-sm text-white/60 mt-2">
-              Data lokasi akan dikirim dan diproses secara server-side
+              Aplikasi akan meminta izin akses lokasi saat Anda membuka chat
             </p>
           </CardHeader>
           <CardContent className="space-y-6">
-            <LocationButton />
-
-            <div className="pt-4 border-t border-white/20">
-              <Link href="/chat" className="block w-full">
-                <Button 
-                  className="w-full py-6 text-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg"
-                  size="lg"
-                >
-                  💬 Buka Chat dengan Ollama MCP
-                </Button>
-              </Link>
-              <p className="text-sm text-white/60 text-center mt-2">
-                Chat AI dengan akses ke MCP tools
-              </p>
-            </div>
+            <Link href="/chat" className="block w-full">
+              <Button 
+                className="w-full py-6 text-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg"
+                size="lg"
+              >
+                💬 Buka Chat
+              </Button>
+            </Link>
+            <p className="text-sm text-white/60 text-center">
+              Chat AI dengan fitur utilitas lengkap
+            </p>
           </CardContent>
         </Card>
       </main>

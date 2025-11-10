@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { submitLocation } from '../actions';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -17,6 +18,7 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [locationStatus, setLocationStatus] = useState<string>('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -29,6 +31,55 @@ export default function ChatPage() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Request location on component mount
+  useEffect(() => {
+    const requestLocation = async () => {
+      if (!navigator.geolocation) {
+        setLocationStatus('Geolocation tidak didukung');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const locationData = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp,
+          };
+
+          try {
+            const result = await submitLocation(locationData);
+            if (result.success) {
+              setLocationStatus('Lokasi terdeteksi');
+            }
+          } catch (error) {
+            setLocationStatus('Gagal mengirim lokasi');
+            console.error(error);
+          }
+        },
+        (error) => {
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              setLocationStatus('Izin lokasi ditolak');
+              break;
+            case error.POSITION_UNAVAILABLE:
+              setLocationStatus('Lokasi tidak tersedia');
+              break;
+            case error.TIMEOUT:
+              setLocationStatus('Request lokasi timeout');
+              break;
+            default:
+              setLocationStatus('Kesalahan lokasi');
+              break;
+          }
+        }
+      );
+    };
+
+    requestLocation();
+  }, []);
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -134,9 +185,9 @@ export default function ChatPage() {
         <div className="flex-1 p-4 flex flex-col">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-white mb-1">
-              Ollama MCP
+              AI Assistant
             </h2>
-            <p className="text-sm text-white/60">AI Chat Assistant</p>
+            <p className="text-sm text-white/60">Chat Assistant</p>
           </div>
           
           <Button
@@ -150,7 +201,29 @@ export default function ChatPage() {
             Clear Chat
           </Button>
 
-          <div className="mt-auto">
+          <div className="mt-auto space-y-3">
+            <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+              <p className="text-xs text-white/60 mb-2 font-medium">Status Lokasi</p>
+              <div className={`flex items-center gap-2 px-3 py-2 rounded-md ${
+                locationStatus.includes('terdeteksi') ? 'bg-emerald-500/20' : 
+                locationStatus.includes('ditolak') || locationStatus.includes('Gagal') ? 'bg-red-500/20' : 
+                'bg-yellow-500/20'
+              }`}>
+                <div className={`w-2 h-2 rounded-full ${
+                  locationStatus.includes('terdeteksi') ? 'bg-emerald-400' : 
+                  locationStatus.includes('ditolak') || locationStatus.includes('Gagal') ? 'bg-red-400' : 
+                  'bg-yellow-400'
+                }`}></div>
+                <span className={`text-sm font-medium ${
+                  locationStatus.includes('terdeteksi') ? 'text-emerald-300' : 
+                  locationStatus.includes('ditolak') || locationStatus.includes('Gagal') ? 'text-red-300' : 
+                  'text-yellow-300'
+                }`}>
+                  {locationStatus || 'Mendeteksi...'}
+                </span>
+              </div>
+            </div>
+            
             <div className="p-4 rounded-lg bg-white/5 border border-white/10">
               <p className="text-xs text-white/60 mb-2 font-medium">API Status</p>
               <div className={`flex items-center gap-2 px-3 py-2 rounded-md ${error ? 'bg-red-500/20' : 'bg-emerald-500/20'}`}>
@@ -172,7 +245,7 @@ export default function ChatPage() {
             Chat dengan AI
           </h1>
           <p className="text-sm text-white/60">
-            Didukung oleh MCP tools untuk kalkulasi dan utilitas lainnya
+            Didukung oleh tools untuk kalkulasi dan utilitas lainnya
           </p>
         </div>
 
@@ -191,7 +264,7 @@ export default function ChatPage() {
                     Mulai Percakapan
                   </h3>
                   <p className="text-white/60 max-w-md">
-                    Ketik pesan Anda di bawah untuk memulai chat dengan AI assistant yang dilengkapi dengan MCP tools
+                    Ketik pesan Anda di bawah untuk memulai chat dengan AI assistant
                   </p>
                 </div>
               )}
