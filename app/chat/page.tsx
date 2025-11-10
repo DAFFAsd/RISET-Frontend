@@ -11,6 +11,9 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
+import rehypeHighlight from 'rehype-highlight';
+import 'katex/dist/katex.min.css';
+import 'highlight.js/styles/github-dark.css';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -289,7 +292,7 @@ export default function ChatPage() {
                           <div className="text-sm sm:text-[15px] leading-relaxed prose prose-invert prose-sm sm:prose-base max-w-none prose-p:my-2 prose-pre:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-code:text-purple-300 prose-code:bg-slate-900/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-slate-900/80 prose-pre:border prose-pre:border-white/10">
                             <ReactMarkdown 
                               remarkPlugins={[remarkGfm, remarkMath]}
-                              rehypePlugins={[rehypeKatex]}
+                              rehypePlugins={[rehypeKatex, rehypeHighlight]}
                             >
                               {message.content}
                             </ReactMarkdown>
