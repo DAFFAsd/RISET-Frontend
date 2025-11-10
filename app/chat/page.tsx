@@ -40,7 +40,7 @@ export default function ChatPage() {
         },
         body: JSON.stringify({
           message: input,
-          model: 'qwen2.5:3b',
+          model: 'qwen3:8b',
         }),
       });
 
