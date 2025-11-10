@@ -7,7 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { submitLocation } from '../actions';
-
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 interface Message {
   role: 'user' | 'assistant';
   content: string;
@@ -278,9 +281,20 @@ export default function ChatPage() {
                             : 'bg-slate-800/50 backdrop-blur-sm text-white border border-white/10'
                         }`}
                       >
-                        <div className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words">
-                          {message.content}
-                        </div>
+                        {message.role === 'user' ? (
+                          <div className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words">
+                            {message.content}
+                          </div>
+                        ) : (
+                          <div className="text-sm sm:text-[15px] leading-relaxed prose prose-invert prose-sm sm:prose-base max-w-none prose-p:my-2 prose-pre:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-code:text-purple-300 prose-code:bg-slate-900/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-slate-900/80 prose-pre:border prose-pre:border-white/10">
+                            <ReactMarkdown 
+                              remarkPlugins={[remarkGfm, remarkMath]}
+                              rehypePlugins={[rehypeKatex]}
+                            >
+                              {message.content}
+                            </ReactMarkdown>
+                          </div>
+                        )}
                       </div>
 
                       {message.role === 'user' && (
