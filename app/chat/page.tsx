@@ -277,18 +277,14 @@ export default function ChatPage() {
                         </div>
                       )}
                       
-                      <div
-                        className={`max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 ${
-                          message.role === 'user'
-                            ? 'bg-gradient-to-br from-purple-600 to-pink-600 text-white ml-auto'
-                            : 'bg-slate-800/50 backdrop-blur-sm text-white border border-white/10'
-                        }`}
-                      >
-                        {message.role === 'user' ? (
+                      {message.role === 'user' ? (
+                        <div className="max-w-[85%] sm:max-w-[80%] rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 bg-gradient-to-br from-purple-600 to-pink-600 text-white ml-auto">
                           <div className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words">
                             {message.content}
                           </div>
-                        ) : (
+                        </div>
+                      ) : (
+                        <div className="flex-1 max-w-none">
                           <div className="text-sm sm:text-[15px] leading-relaxed prose prose-invert prose-sm sm:prose-base max-w-none prose-p:my-2 prose-pre:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-1 prose-code:text-purple-300 prose-code:bg-slate-900/50 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-pre:bg-slate-900/80 prose-pre:border prose-pre:border-white/10">
                             <ReactMarkdown 
                               remarkPlugins={[remarkGfm, remarkMath]}
@@ -297,8 +293,8 @@ export default function ChatPage() {
                               {message.content}
                             </ReactMarkdown>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
 
                       {message.role === 'user' && (
                         <div className="hidden sm:flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 items-center justify-center flex-shrink-0 mt-1">
@@ -312,21 +308,19 @@ export default function ChatPage() {
                   
                   {loading && (
                     <div className="flex gap-3 justify-start">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                      <div className="hidden sm:flex w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 items-center justify-center flex-shrink-0">
                         <svg className="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                       </div>
-                      <div className="bg-slate-800/50 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex gap-1">
-                            <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
-                            <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
-                            <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
-                          </div>
-                          <span className="text-sm text-white/60">Processing</span>
+                      <div className="flex items-center gap-2">
+                        <div className="flex gap-1">
+                          <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                          <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                          <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                         </div>
+                        <span className="text-sm text-white/60">Processing</span>
                       </div>
                     </div>
                   )}
