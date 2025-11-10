@@ -322,7 +322,7 @@ export default function ChatPage() {
           </ScrollArea>
 
           {/* Input Area - Centered when empty, bottom when has messages */}
-          <div className={`${messages.length === 0 ? 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl px-4' : 'border-t border-white/5'}`}>
+          <div className={`${messages.length === 0 ? 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl px-4' : ''}`}>
             <div className={`${messages.length === 0 ? 'space-y-6' : 'max-w-4xl mx-auto px-4 py-4'}`}>
               {messages.length === 0 && (
                 <div className="text-center mb-8">
