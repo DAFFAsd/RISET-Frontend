@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// import { ScrollArea } from '@/components/ui/scroll-area';
 import { submitLocation } from '../actions';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -15,8 +15,17 @@ import rehypeHighlight from 'rehype-highlight';
 import 'katex/dist/katex.min.css';
 import 'highlight.js/styles/github-dark.css';
 interface Message {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'status' | 'tool';
   content: string;
+  tool_name?: string;
+  tool_status?: 'calling' | 'processing' | 'completed' | 'error';
+  tool_chain?: string[];
+  toolCalls?: ToolCall[];
+}
+
+interface ToolCall {
+  tool_name: string;
+  tool_status: 'calling' | 'processing' | 'completed' | 'error';
 }
 
 export default function ChatPage() {
@@ -25,6 +34,8 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [locationStatus, setLocationStatus] = useState<string>('');
+  const [toolStatusChain, setToolStatusChain] = useState<Message[]>([]);
+  const [persistentToolChain, setPersistentToolChain] = useState<Message[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -95,6 +106,7 @@ export default function ChatPage() {
     setInput('');
     setLoading(true);
     setError('');
+    setToolStatusChain([]);
 
     try {
       const response = await fetch('http://localhost:8000/api/chat', {
@@ -115,6 +127,7 @@ export default function ChatPage() {
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let assistantMessage = '';
+      let currentToolChain: Message[] = [];
 
       if (reader) {
         while (true) {
@@ -125,9 +138,44 @@ export default function ChatPage() {
           const lines = chunk.split('\n').filter(line => line.trim());
 
           for (const line of lines) {
+            // Handle Server-Sent Events format
+            const jsonLine = line.replace(/^data: /, '');
+            if (!jsonLine.trim()) continue;
+            
             try {
-              const data = JSON.parse(line);
-              if (data.role === 'assistant' && data.content) {
+              const data = JSON.parse(jsonLine);
+              
+              if (data.role === 'status') {
+                // Update tool status chain
+                setToolStatusChain((prev) => {
+                  const newChain = [...prev];
+                  const existingIndex = newChain.findIndex(
+                    (msg) => msg.tool_name === data.tool_name
+                  );
+                  
+                  if (existingIndex >= 0) {
+                    newChain[existingIndex] = data;
+                  } else {
+                    newChain.push(data);
+                  }
+                  
+                  return newChain;
+                });
+
+                // Also update persistent chain
+                currentToolChain = [...currentToolChain];
+                const existingPersistentIndex = currentToolChain.findIndex(
+                  (msg) => msg.tool_name === data.tool_name
+                );
+                
+                if (existingPersistentIndex >= 0) {
+                  currentToolChain[existingPersistentIndex] = data;
+                } else {
+                  currentToolChain.push(data);
+                }
+                
+                setPersistentToolChain(currentToolChain);
+              } else if (data.role === 'assistant' && data.content) {
                 assistantMessage += data.content;
                 setMessages((prev) => {
                   const newMessages = [...prev];
@@ -136,14 +184,27 @@ export default function ChatPage() {
                   if (lastMessage && lastMessage.role === 'assistant') {
                     lastMessage.content = assistantMessage;
                   } else {
-                    newMessages.push({ role: 'assistant', content: assistantMessage });
+                    newMessages.push({
+                      role: 'assistant',
+                      content: assistantMessage,
+                      tool_name: data.tool_name,
+                      tool_status: data.tool_status,
+                      tool_chain: data.tool_chain
+                    });
                   }
                   
                   return newMessages;
                 });
+              } else if (data.role === 'tool') {
+                // Update tool status to completed when we get tool results
+                if (currentToolChain.length > 0) {
+                  const lastTool = currentToolChain[currentToolChain.length - 1];
+                  lastTool.tool_status = 'completed';
+                  setPersistentToolChain([...currentToolChain]);
+                }
               }
             } catch (e) {
-              console.error('Error parsing JSON:', e);
+              console.error('Error parsing JSON:', e, 'Line:', jsonLine);
             }
           }
         }
@@ -153,6 +214,8 @@ export default function ChatPage() {
       console.error('Error:', err);
     } finally {
       setLoading(false);
+      // Don't clear tool status chain immediately, keep it for visibility
+      // setToolStatusChain([]);
     }
   };
 
@@ -163,6 +226,8 @@ export default function ChatPage() {
       });
       setMessages([]);
       setError('');
+      setToolStatusChain([]);
+      setPersistentToolChain([]);
     } catch (err) {
       console.error('Error clearing chat:', err);
     }
@@ -260,7 +325,7 @@ export default function ChatPage() {
 
         {/* Messages Area */}
         <div className="flex-1 overflow-hidden relative flex flex-col">
-          <ScrollArea className="flex-1" ref={scrollAreaRef}>
+          <div className="flex-1 overflow-auto" ref={scrollAreaRef}>
             <div className={`max-w-4xl mx-auto px-4 md:px-4 ${messages.length === 0 ? '' : 'py-6'}`}>
               {messages.length > 0 && (
                 <div className="space-y-6">
@@ -306,6 +371,98 @@ export default function ChatPage() {
                     </div>
                   ))}
                   
+                  {/* Persistent Tool Status Display */}
+                  {(persistentToolChain.length > 0 || toolStatusChain.length > 0) && (
+                    <div className="flex gap-3 justify-start mb-4">
+                      <div className="hidden sm:flex w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1 max-w-none">
+                        <div className="bg-slate-800/60 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-xs text-white/60 font-medium">Tool Execution Chain</p>
+                            {loading && (
+                              <span className="text-xs text-yellow-400 animate-pulse">Live</span>
+                            )}
+                          </div>
+                          <div className="space-y-2">
+                            {/* Show persistent chain first */}
+                            {persistentToolChain.map((status, index) => (
+                              <div key={`persistent-${index}`} className="flex items-center gap-2 p-2 rounded-lg bg-white/5">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  status.tool_status === 'calling' ? 'bg-yellow-400 animate-pulse' :
+                                  status.tool_status === 'processing' ? 'bg-blue-400 animate-pulse' :
+                                  status.tool_status === 'completed' ? 'bg-green-400' :
+                                  'bg-red-400'
+                                }`}></div>
+                                <span className="text-sm text-white/80 font-mono">
+                                  {status.tool_name}
+                                </span>
+                                <span className={`text-xs px-2 py-1 rounded-full ${
+                                  status.tool_status === 'calling' ? 'bg-yellow-500/20 text-yellow-300' :
+                                  status.tool_status === 'processing' ? 'bg-blue-500/20 text-blue-300' :
+                                  status.tool_status === 'completed' ? 'bg-green-500/20 text-green-300' :
+                                  'bg-red-500/20 text-red-300'
+                                }`}>
+                                  {status.tool_status}
+                                </span>
+                                {status.tool_status === 'completed' && (
+                                  <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </div>
+                            ))}
+                            
+                            {/* Show current execution chain if different from persistent */}
+                            {toolStatusChain.length > 0 && (
+                              <div className="mt-2 pt-2 border-t border-white/10">
+                                <p className="text-xs text-white/60 mb-2">Currently Executing:</p>
+                                {toolStatusChain.map((status, index) => (
+                                  <div key={`current-${index}`} className="flex items-center gap-2 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                                    <div className={`w-2 h-2 rounded-full ${
+                                      status.tool_status === 'calling' ? 'bg-yellow-400 animate-pulse' :
+                                      status.tool_status === 'processing' ? 'bg-blue-400 animate-pulse' :
+                                      status.tool_status === 'completed' ? 'bg-green-400' :
+                                      'bg-red-400'
+                                    }`}></div>
+                                    <span className="text-sm text-white/80 font-mono">
+                                      {status.tool_name}
+                                    </span>
+                                    <span className={`text-xs px-2 py-1 rounded-full ${
+                                      status.tool_status === 'calling' ? 'bg-yellow-500/20 text-yellow-300' :
+                                      status.tool_status === 'processing' ? 'bg-blue-500/20 text-blue-300' :
+                                      status.tool_status === 'completed' ? 'bg-green-500/20 text-green-300' :
+                                      'bg-red-500/20 text-red-300'
+                                    }`}>
+                                      {status.tool_status}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                            
+                            {/* Show execution chain if available */}
+                            {toolStatusChain.length > 0 && toolStatusChain[0]?.tool_chain && toolStatusChain[0].tool_chain!.length > 1 && (
+                              <div className="mt-2 pt-2 border-t border-white/10">
+                                <p className="text-xs text-white/60">Full Execution Chain:</p>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {toolStatusChain[0].tool_chain!.map((tool, chainIndex) => (
+                                    <span key={chainIndex} className="text-xs bg-purple-500/20 text-purple-300 px-2 py-1 rounded">
+                                      {tool}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
                   {loading && (
                     <div className="flex gap-3 justify-start">
                       <div className="hidden sm:flex w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 items-center justify-center flex-shrink-0">
@@ -320,7 +477,9 @@ export default function ChatPage() {
                           <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
                           <span className="w-2 h-2 bg-white/60 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                         </div>
-                        <span className="text-sm text-white/60">Processing</span>
+                        <span className="text-sm text-white/60">
+                          {toolStatusChain.length > 0 ? 'Processing tools...' : 'Processing'}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -342,7 +501,7 @@ export default function ChatPage() {
                 </div>
               )}
             </div>
-          </ScrollArea>
+          </div>
 
           {/* Input Area - Centered when empty, bottom when has messages */}
           <div className={`${messages.length === 0 ? 'absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-3xl px-4' : ''}`}>
