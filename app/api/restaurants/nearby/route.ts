@@ -2,22 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || 'AIzaSyD1mK-KGo_Ul2WI1KQe7NjlRbQfZVyDXSY';
 
-// Haversine formula to calculate distance between two coordinates
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371e3; // Earth's radius in meters
-  const φ1 = lat1 * Math.PI / 180;
-  const φ2 = lat2 * Math.PI / 180;
-  const Δφ = (lat2 - lat1) * Math.PI / 180;
-  const Δλ = (lon2 - lon1) * Math.PI / 180;
-
-  const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-    Math.cos(φ1) * Math.cos(φ2) *
-    Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c; // Distance in meters
-}
-
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -25,6 +9,7 @@ export async function GET(req: NextRequest) {
     const longitude = parseFloat(searchParams.get('longitude') || '0');
     const radius = parseInt(searchParams.get('radius') || '5000');
     const keyword = searchParams.get('keyword') || '';
+    const limit = parseInt(searchParams.get('limit') || '10');
 
     if (!latitude || !longitude) {
       return NextResponse.json(
@@ -46,13 +31,27 @@ export async function GET(req: NextRequest) {
       const placesData = await placesResponse.json();
       
       if (placesData.status === 'OK' && placesData.results) {
-        const restaurants = placesData.results.slice(0, 10).map((place: any) => {
-          const distance = calculateDistance(
-            latitude, 
-            longitude, 
-            place.geometry.location.lat, 
-            place.geometry.location.lng
-          );
+        // Prepare destinations for Distance Matrix API
+        const slicedResults = placesData.results.slice(0, limit);
+        const destinations = slicedResults
+          .map((place: any) => `${place.geometry.location.lat},${place.geometry.location.lng}`)
+          .join('|');
+        
+        // Call Distance Matrix API to get accurate distances
+        const distanceMatrixUrl = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${latitude},${longitude}&destinations=${destinations}&key=${GOOGLE_MAPS_API_KEY}`;
+        
+        const distanceResponse = await fetch(distanceMatrixUrl);
+        const distanceData = await distanceResponse.json();
+        
+        const restaurants = slicedResults.map((place: any, index: number) => {
+          let distance = 0;
+          let distanceText = 'N/A';
+          
+          // Get distance from Distance Matrix API if available
+          if (distanceData.status === 'OK' && distanceData.rows[0]?.elements[index]?.status === 'OK') {
+            distance = distanceData.rows[0].elements[index].distance.value; // in meters
+            distanceText = distanceData.rows[0].elements[index].distance.text;
+          }
           
           return {
             id: place.place_id,
@@ -62,10 +61,8 @@ export async function GET(req: NextRequest) {
               ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_MAPS_API_KEY}`
               : null,
             rating: place.rating || 0,
-            distance: Math.round(distance),
-            distanceText: distance < 1000 
-              ? `${Math.round(distance)} m` 
-              : `${(distance / 1000).toFixed(1)} km`,
+            distance: distance,
+            distanceText: distanceText,
             latitude: place.geometry.location.lat,
             longitude: place.geometry.location.lng,
             isOpen: place.opening_hours?.open_now,
@@ -82,7 +79,8 @@ export async function GET(req: NextRequest) {
             longitude
           },
           totalFound: restaurants.length,
-          keyword: keyword || null
+          keyword: keyword || null,
+          limit: limit
         });
       } else {
         return NextResponse.json({
