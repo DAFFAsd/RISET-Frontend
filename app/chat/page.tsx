@@ -29,8 +29,23 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [locationStatus, setLocationStatus] = useState<string>("")
+  const [user, setUser] = useState<any>(null)
+  const [token, setToken] = useState<string>("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+
+  // Check authentication on mount
+  useEffect(() => {
+    const storedToken = localStorage.getItem('token')
+    const storedUser = localStorage.getItem('user')
+    
+    if (storedToken && storedUser) {
+      setToken(storedToken)
+      setUser(JSON.parse(storedUser))
+    } else {
+      window.location.href = '/'
+    }
+  }, [])
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -92,7 +107,7 @@ export default function ChatPage() {
   }, [])
 
   const sendMessage = async () => {
-    if (!input.trim() || loading) return
+    if (!input.trim() || loading || !token) return
 
     const userMessage: Message = { role: "user", content: input }
     setMessages((prev) => [...prev, userMessage])
@@ -109,6 +124,7 @@ export default function ChatPage() {
         body: JSON.stringify({
           message: input,
           model: "qwen3:8b",
+          token: token,
         }),
       })
 

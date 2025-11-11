@@ -1,35 +1,107 @@
-import Link from 'next/link';
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import AuthForm from './AuthForm';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
+interface User {
+  id: number;
+  username: string;
+  saldo: number;
+}
+
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      } else {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    } catch (error) {
+      console.error('Auth check error:', error);
+    }
+    setLoading(false);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center gradient-bg">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthForm onSuccess={checkAuth} />;
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center gradient-bg">
       <main className="flex flex-col items-center justify-center gap-8 p-8 max-w-2xl w-full">
         <Card className="w-full bg-white/10 backdrop-blur-sm border-white/20 text-white">
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-bold mb-2">
-              Aplikasi Hilirisasi - Mock
+              🍔 FoodBot - Pesan Makanan
             </CardTitle>
-            <CardDescription className="text-lg text-white/80">
-              Chat dengan AI Assistant
+            <CardDescription className="text-lg text-white/90">
+              Selamat datang, <span className="font-semibold">{user.username}</span>!
             </CardDescription>
-            <p className="text-sm text-white/60 mt-2">
-              Aplikasi akan meminta izin akses lokasi saat Anda membuka chat
-            </p>
+            <div className="mt-4 p-4 bg-white/20 rounded-lg">
+              <p className="text-sm text-white/70">Saldo Anda</p>
+              <p className="text-3xl font-bold text-green-300">
+                Rp {user.saldo.toLocaleString('id-ID')}
+              </p>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <Link href="/chat" className="block w-full">
-              <Button 
-                className="w-full py-6 text-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold shadow-lg"
-                size="lg"
-              >
-                💬 Buka Chat
-              </Button>
-            </Link>
-            <p className="text-sm text-white/60 text-center">
-              Chat AI dengan fitur utilitas lengkap
+            <Button 
+              onClick={() => router.push('/chat')}
+              className="w-full py-6 text-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg"
+              size="lg"
+            >
+              🤖 Chat dengan FoodBot
+            </Button>
+            <p className="text-sm text-white/70 text-center">
+              Pesan makanan dari berbagai restoran dengan mudah menggunakan chatbot AI
             </p>
+            <Button 
+              onClick={handleLogout}
+              variant="outline"
+              className="w-full border-white/30 text-white hover:bg-white/10"
+            >
+              Logout
+            </Button>
           </CardContent>
         </Card>
       </main>
