@@ -421,13 +421,15 @@ export default function ChatPage() {
 
                       {message.role === "tool-result" && (
                         <div className="flex gap-3 justify-start ml-8 sm:ml-12 mt-2 mb-4">
-                          <div className="flex-1 max-w-none">
+                          <div className="flex-1 max-w-[85%] sm:max-w-[80%]">
                             <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 sm:p-4">
                               <p className="text-xs text-green-300/70 mb-2 font-semibold">
                                 Hasil dari {message.tool_name}
                               </p>
-                              <div className="text-sm sm:text-[15px] text-green-300/90 leading-relaxed whitespace-pre-wrap break-words font-mono">
-                                {message.content}
+                              <div className="text-sm sm:text-[15px] text-green-300/90 leading-relaxed whitespace-pre-wrap break-words overflow-x-auto font-mono max-w-full">
+                                <pre className="whitespace-pre-wrap break-words text-wrap overflow-wrap-anywhere">
+                                  {message.content}
+                                </pre>
                               </div>
                             </div>
                           </div>

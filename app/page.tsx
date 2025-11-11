@@ -95,10 +95,9 @@ export default function Home() {
             <p className="text-sm text-white/70 text-center">
               Pesan makanan dari berbagai restoran dengan mudah menggunakan chatbot AI
             </p>
-            <Button 
+            <Button
               onClick={handleLogout}
-              variant="outline"
-              className="w-full border-white/30 text-white hover:bg-white/10"
+              className="w-full bg-slate-800/80 border border-white/20 text-white hover:bg-slate-700/80 hover:border-white/30"
             >
               Logout
             </Button>
