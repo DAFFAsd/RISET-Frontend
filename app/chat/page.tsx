@@ -266,7 +266,7 @@ export default function ChatPage() {
 
         <div className="flex-1 p-4 flex flex-col">
           <div className="mb-6">
-            <h2 className="text-xl font-bold text-white mb-1">Homi</h2>
+            <h2 className="text-xl font-bold text-white mb-1">HooMi</h2>
             <p className="text-sm text-white/60">Chat Assistant</p>
           </div>
 

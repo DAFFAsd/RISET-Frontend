@@ -90,10 +90,10 @@ export default function Home() {
               className="w-full py-6 text-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg"
               size="lg"
             >
-              🤖 Chat dengan HooMAI
+              🤖 Chat dengan HooMi AI
             </Button>
             <p className="text-sm text-white/70 text-center">
-              Pesan makanan dari berbagai restoran dengan mudah menggunakan chatbot AI
+              Pesan makanan dari berbagai restoran dengan mudah menggunakan HooMi AI
             </p>
             <Button
               onClick={handleLogout}
