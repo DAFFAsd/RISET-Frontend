@@ -72,7 +72,7 @@ export default function Home() {
         <Card className="w-full bg-white/10 backdrop-blur-sm border-white/20 text-white">
           <CardHeader className="text-center">
             <CardTitle className="text-4xl font-bold mb-2">
-              🍔 FoodBot - Pesan Makanan
+              🍔 Hoomi Food
             </CardTitle>
             <CardDescription className="text-lg text-white/90">
               Selamat datang, <span className="font-semibold">{user.username}</span>!
@@ -90,7 +90,7 @@ export default function Home() {
               className="w-full py-6 text-lg bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold shadow-lg"
               size="lg"
             >
-              🤖 Chat dengan FoodBot
+              🤖 Chat dengan HooMAI
             </Button>
             <p className="text-sm text-white/70 text-center">
               Pesan makanan dari berbagai restoran dengan mudah menggunakan chatbot AI
