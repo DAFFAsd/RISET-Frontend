@@ -18,6 +18,8 @@ CREATE TABLE IF NOT EXISTS restaurants (
     description TEXT,
     image_url VARCHAR(500),
     rating DECIMAL(2, 1) DEFAULT 0.0,
+    latitude DECIMAL(10, 8),
+    longitude DECIMAL(11, 8),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -67,13 +69,13 @@ CREATE TABLE IF NOT EXISTS transactions (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Insert sample restaurants
-INSERT INTO restaurants (name, description, rating) VALUES
-    ('Warung Makan Bu Tini', 'Masakan rumahan dengan cita rasa autentik', 4.5),
-    ('Pizza Corner', 'Pizza dan pasta terbaik di kota', 4.7),
-    ('Nasi Goreng Abang', 'Nasi goreng spesial 24 jam', 4.3),
-    ('Sate Pak Joko', 'Sate ayam dan kambing pilihan', 4.6),
-    ('Bakso Mas Bro', 'Bakso dan mie ayam enak', 4.4)
+-- Insert sample restaurants with coordinates (Jakarta area)
+INSERT INTO restaurants (name, description, rating, latitude, longitude) VALUES
+    ('Warung Makan Bu Tini', 'Masakan rumahan dengan cita rasa autentik', 4.5, -6.200000, 106.816666),
+    ('Pizza Corner', 'Pizza dan pasta terbaik di kota', 4.7, -6.175110, 106.865039),
+    ('Nasi Goreng Abang', 'Nasi goreng spesial 24 jam', 4.3, -6.208763, 106.845599),
+    ('Sate Pak Joko', 'Sate ayam dan kambing pilihan', 4.6, -6.186486, 106.834091),
+    ('Bakso Mas Bro', 'Bakso dan mie ayam enak', 4.4, -6.195140, 106.823311)
 ON CONFLICT DO NOTHING;
 
 -- Insert sample menu items

@@ -29,6 +29,7 @@ export default function ChatPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [locationStatus, setLocationStatus] = useState<string>("")
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [user, setUser] = useState<any>(null)
   const [token, setToken] = useState<string>("")
   const scrollAreaRef = useRef<HTMLDivElement>(null)
@@ -74,6 +75,12 @@ export default function ChatPage() {
             timestamp: position.timestamp,
           }
 
+          // Save location to state
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          })
+
           try {
             const result = await submitLocation(locationData)
             if (result.success) {
@@ -116,13 +123,19 @@ export default function ChatPage() {
     setError("")
 
     try {
+      // Prepare message with location context if available
+      let messageWithContext = input
+      if (userLocation) {
+        messageWithContext = `${input}\n\n[KONTEKS LOKASI PENGGUNA: latitude=${userLocation.latitude}, longitude=${userLocation.longitude}]`
+      }
+
       const response = await fetch("http://localhost:8000/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          message: input,
+          message: messageWithContext,
           model: "qwen3:8b",
           token: token,
         }),
@@ -306,6 +319,17 @@ export default function ChatPage() {
                   {locationStatus || "Mendeteksi..."}
                 </span>
               </div>
+              {userLocation && (
+                <div className="mt-2 text-xs text-white/40 font-mono">
+                  <div className="flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>{userLocation.latitude.toFixed(6)}, {userLocation.longitude.toFixed(6)}</span>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="p-4 rounded-lg bg-white/5 border border-white/10">
